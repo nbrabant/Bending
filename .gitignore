@@ -218,3 +218,6 @@ pip-log.txt
 # Maven
 target/**
 null/
+
+.idea/
+.git/
