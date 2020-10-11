@@ -4,25 +4,23 @@ package com.johnwesthoff.bending.entity;
  * and open the template in the editor.
  */
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.nio.ByteBuffer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.johnwesthoff.bending.Client;
 import com.johnwesthoff.bending.Constants;
 import com.johnwesthoff.bending.Server;
 import com.johnwesthoff.bending.logic.Player;
 import com.johnwesthoff.bending.logic.World;
 
+import java.awt.*;
+import java.nio.ByteBuffer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
- *
  * @author John
  */
 public class ShardEntity extends Entity {
     // public int maker = 0;
-    public int radius = 16;
+    public int radius = Constants.RADIUS_REGULAR;
     public int gravity = 0;
 
     public ShardEntity(int x, int y, int hspeed, int vspeed, int ma) {
@@ -45,7 +43,7 @@ public class ShardEntity extends Entity {
     @Override
     public void onUpdate(World apples) {
         if ((apples.isSolid(X, Y))) {
-            // apples.ground.FillCircleW(X, Y, radius, World.STONE);
+            // apples.ground.FillCircleW(X, Y, radius, Constants.STONE);
             alive = false;
             // apples.explode(X, Y, 32, 8, 16);
         }
@@ -75,6 +73,11 @@ public class ShardEntity extends Entity {
         }
     }
 
+    /**
+     * Reconstruct the shard entity
+     * @param in
+     * @param world World in which the entity should be reconstructed
+     */
     public static void reconstruct(ByteBuffer in, World world) {
         try {
             world.entityList.add(new ShardEntity(in.getInt(), in.getInt(), in.getInt(), in.getInt(), in.getInt()));
@@ -93,6 +96,25 @@ public class ShardEntity extends Entity {
         }
     }
 
+
+    @Override
+    public void checkAndHandleCollision(Client client) {
+
+        if (Client.pointDis(X, Y - World.head, client.world.x, client.world.y) < radius * 4 && maker != client.ID
+                && (client.gameMode <= 0 || client.badTeam.contains(maker))) {
+            client.hurt(15);
+            client.world.vspeed -= 5;
+            client.xspeed += 7 - client.random.nextInt(14);
+            client.lastHit = maker;
+            alive = false;
+            client.killMessage = "~ was sniped by `.";
+        }
+    }
+    /**
+     * Method to get whether the shard collided with the client
+     * @param w World in which this should be tested
+     * @return true (if the shard collided with the client) or false (else)
+     */
     private boolean collided(World w) {
         double direction = Client.pointDir(previousX, previousY, X, Y);
         int speed = (int) Client.pointDis(previousX, previousY, X, Y);

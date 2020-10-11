@@ -5,15 +5,14 @@
 package com.johnwesthoff.bending.entity;
 
 
-import java.awt.Graphics;
-import java.nio.ByteBuffer;
-
 import com.johnwesthoff.bending.Server;
 import com.johnwesthoff.bending.logic.Player;
 import com.johnwesthoff.bending.logic.World;
 
+import java.awt.*;
+import java.nio.ByteBuffer;
+
 /**
- *
  * @author John
  */
 public class FlameThrowerEntity extends Entity {
@@ -65,7 +64,7 @@ public class FlameThrowerEntity extends Entity {
                     .putInt(my).putInt(maker).putInt(Iw));
         }
         if (life-- < 0) {
-            // lol.earth.ground.FillCircleW(X, Y, radius, World.STONE);
+            // lol.earth.ground.FillCircleW(X, Y, radius, Constants.STONE);
             alive = false;
             lol.sendMessage(Server.DESTROY, ByteBuffer.allocate(40).putInt(MYID));
         }

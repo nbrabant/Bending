@@ -17,12 +17,11 @@ import com.johnwesthoff.bending.logic.Player;
 import com.johnwesthoff.bending.logic.World;
 
 /**
- *
  * @author John
  */
 public class IceShardEntity extends Entity {
     // public int maker = 0;
-    public int radius = 16;
+    public int radius = Constants.RADIUS_REGULAR;
     public int gravity = 0;
 
     public IceShardEntity(int x, int y, int hspeed, int vspeed, int ma) {
@@ -45,7 +44,7 @@ public class IceShardEntity extends Entity {
     @Override
     public void onUpdate(World apples) {
         if (collided(apples)) {
-            // apples.ground.FillCircleW(X, Y, radius, World.STONE);
+            // apples.ground.FillCircleW(X, Y, radius, Constants.STONE);
             alive = false;
             // apples.explode(X, Y, 32, 8, 16);
         }
@@ -75,6 +74,12 @@ public class IceShardEntity extends Entity {
         }
     }
 
+    /**
+     * Reconstruct the ice shard entity
+     * 
+     * @param in
+     * @param world World in which the entity should be reconstructed
+     */
     public static void reconstruct(ByteBuffer in, World world) {
         try {
             world.entityList.add(new IceShardEntity(in.getInt(), in.getInt(), in.getInt(), in.getInt(), in.getInt()));
@@ -88,10 +93,10 @@ public class IceShardEntity extends Entity {
     @Override
     public void onServerUpdate(Server lol) {
         if (lol.earth.checkCollision(X, Y)) {
-            radius = 16;
-            lol.earth.ground.FillCircleW((int) X, (int) Y, 54, World.ICE);
+            radius = Constants.RADIUS_REGULAR;
+            lol.earth.ground.FillCircleW((int) X, (int) Y, 54, Constants.ICE);
             lol.sendMessage(Server.FILL,
-                    ByteBuffer.allocate(40).putInt((int) X).putInt((int) Y).putInt(54).put(World.ICE));
+                    ByteBuffer.allocate(40).putInt((int) X).putInt((int) Y).putInt(54).put(Constants.ICE));
             alive = false;
         }
         if (time++ > 1) {
@@ -102,6 +107,25 @@ public class IceShardEntity extends Entity {
         }
     }
 
+    public void checkAndHandleCollision(Client client) {
+
+        if (client.checkCollision(X, Y) && maker != client.ID
+                && (client.gameMode <= 0 || client.badTeam.contains(maker))) {
+            client.hurt(15);
+            client.world.vspeed -= 5;
+            client.xspeed += 7 - client.random.nextInt(14);
+            client.lastHit = maker;
+            alive = false;
+            client.killMessage = "~ was hit by `'s icey attack!";
+        }
+    }
+
+    /**
+     * Method to get whether the ice shard collided with the client
+     * 
+     * @param w World in which this should be tested
+     * @return true (if the ice shard collided with the client) or false (else)
+     */
     private boolean collided(World w) {
         double direction = Client.pointDir(previousX, previousY, X, Y);
         int speed = (int) Client.pointDis(previousX, previousY, X, Y);

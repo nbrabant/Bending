@@ -4,23 +4,21 @@ package com.johnwesthoff.bending.entity;
  * and open the template in the editor.
  */
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.nio.ByteBuffer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.johnwesthoff.bending.Constants;
 import com.johnwesthoff.bending.Server;
 import com.johnwesthoff.bending.logic.World;
 
+import java.awt.*;
+import java.nio.ByteBuffer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
- *
  * @author John
  */
 public class FreezeEntity extends Entity {
     // public int maker = 0;
-    public int radius = 16;
+    public int radius = Constants.RADIUS_REGULAR;
     public int gravity = 1;
 
     public FreezeEntity(int x, int y, int hspeed, int vspeed, int ma) {
@@ -89,6 +87,12 @@ public class FreezeEntity extends Entity {
         }
     }
 
+
+    /**
+     * Reconstruct the freeze entity
+     * @param in
+     * @param world World in which the entity should be reconstructed
+     */
     public static void reconstruct(ByteBuffer in, World world) {
         try {
             world.entityList.add(new FreezeEntity(in.getInt(), in.getInt(), in.getInt(), in.getInt(), in.getInt()));

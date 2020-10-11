@@ -10,17 +10,17 @@ import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.johnwesthoff.bending.Client;
 import com.johnwesthoff.bending.Constants;
 import com.johnwesthoff.bending.Server;
 import com.johnwesthoff.bending.logic.World;
 
 /**
- *
  * @author John
  */
 public class SnowEntity extends Entity {
     // public int maker = 0;
-    public int radius = 16;
+    public int radius = Constants.RADIUS_REGULAR;
     public int gravity = 1;
 
     public SnowEntity(int x, int y, int hspeed, int vspeed, int ma) {
@@ -35,7 +35,7 @@ public class SnowEntity extends Entity {
     public void onDraw(Graphics G, int viewX, int viewY) {
         if (X > viewX && X < viewX + Constants.WIDTH_INT && Y > viewY && Y < viewY + Constants.HEIGHT_INT) {
             G.setColor(Color.white);
-            G.fillArc((int) X - viewX - 1, (int) Y - viewY - 1, 2, 2, 0, 360);
+            G.fillArc((int) X - viewX - 1, (int) Y - viewY - 1, 2, 2, 0, Constants.FULL_ANGLE);
         }
     }
 
@@ -69,6 +69,20 @@ public class SnowEntity extends Entity {
     }
 
     @Override
+    public void checkAndHandleCollision(Client client) {
+
+        if (client.checkCollision(X, Y) && maker != client.ID
+                && (client.gameMode <= 0 || client.badTeam.contains(maker))) {
+            client.hurt(8);
+            client.world.vspeed -= 3;
+            client.xspeed += 3 - client.random.nextInt(6);
+            client.lastHit = maker;
+            alive = false;
+            client.killMessage = "~ will need to be thawed out after fighting `!";
+        }
+    }
+
+    @Override
     public void cerealize(ByteBuffer out) {
         try {
 
@@ -83,6 +97,12 @@ public class SnowEntity extends Entity {
         }
     }
 
+
+    /**
+     * Reconstruct the snow entity
+     * @param in
+     * @param world World in which the entity should be reconstructed
+     */
     public static void reconstruct(ByteBuffer in, World world) {
         try {
             world.entityList.add(new SnowEntity(in.getInt(), in.getInt(), in.getInt(), in.getInt(), in.getInt()));

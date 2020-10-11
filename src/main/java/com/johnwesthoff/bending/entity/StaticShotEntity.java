@@ -4,17 +4,16 @@ package com.johnwesthoff.bending.entity;
  * and open the template in the editor.
  */
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.nio.ByteBuffer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.johnwesthoff.bending.Client;
 import com.johnwesthoff.bending.Constants;
 import com.johnwesthoff.bending.Server;
 import com.johnwesthoff.bending.logic.Player;
 import com.johnwesthoff.bending.logic.World;
+
+import java.awt.*;
+import java.nio.ByteBuffer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -36,7 +35,7 @@ public class StaticShotEntity extends Entity {
     public void onDraw(Graphics G, int viewX, int viewY) {
         if (X > viewX && X < viewX + Constants.WIDTH_INT && Y > viewY && Y < viewY + Constants.HEIGHT_INT) {
             G.setColor(radius == 0 ? Color.blue : Color.red);
-            G.drawArc(((int) X - 3) - viewX, (int) (Y - 3) - viewY, 6, 6, 0, 360);
+            G.drawArc(((int) X - 3) - viewX, (int) (Y - 3) - viewY, 6, 6, 0, Constants.FULL_ANGLE);
             G.drawLine((int) (X - 2) - viewX, (int) Y - viewY, (int) (X + 2) - viewX, (int) Y - viewY);
         }
     }
@@ -71,6 +70,11 @@ public class StaticShotEntity extends Entity {
         }
     }
 
+    /**
+     * Reconstruct the static shot entity
+     * @param in
+     * @param world World in which the entity should be reconstructed
+     */
     public static void reconstruct(ByteBuffer in, World world) {
         try {
             world.entityList.add(new StaticShotEntity(in.getInt(), in.getInt(), in.getInt(), in.getInt(), in.getInt()));

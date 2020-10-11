@@ -33,6 +33,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import com.johnwesthoff.bending.Constants;
 import com.johnwesthoff.bending.logic.World;
 import com.johnwesthoff.bending.util.network.ResourceLoader;
 
@@ -648,6 +649,9 @@ public class MapMaker extends javax.swing.JFrame implements Runnable, MouseMotio
 
     byte toSet = 0;
 
+    /**
+     * Loads the picture
+     */
     public void loadPicture() {
         try {
 
@@ -682,47 +686,47 @@ public class MapMaker extends javax.swing.JFrame implements Runnable, MouseMotio
                     blue = getBlue(color);
                     green = getGreen(color);
                     if (red > 200 && blue > 200 && green > 200) {
-                        writeData[cx][cy] = World.AIR;
+                        writeData[cx][cy] = Constants.AIR;
                         continue;
                     }
                     if (red > 100 && blue > 200 && green < 20) {
-                        writeData[cx][cy] = World.CRYSTAL;
+                        writeData[cx][cy] = Constants.CRYSTAL;
                         continue;
                     }
                     if (red < 50 && blue > 100 && green > 40) {
-                        writeData[cx][cy] = World.ETHER;
+                        writeData[cx][cy] = Constants.ETHER;
                         continue;
                     }
                     if (red < 100 && blue < 100 && green > 200) {
-                        writeData[cx][cy] = World.GROUND;
+                        writeData[cx][cy] = Constants.GROUND;
                         continue;
                     }
                     if (red < 100 && blue > 200 && green > 200) {
-                        writeData[cx][cy] = World.ICE;
+                        writeData[cx][cy] = Constants.ICE;
                         continue;
                     }
                     if (red > 200 && blue < 20 && green < 20) {
-                        writeData[cx][cy] = World.LAVA;
+                        writeData[cx][cy] = Constants.LAVA;
                         continue;
                     }
                     if (red < 20 && blue < 20 && green < 20) {
-                        writeData[cx][cy] = World.OIL;
+                        writeData[cx][cy] = Constants.OIL;
                         continue;
                     }
                     if (red > 200 && blue < 20 && green > 200) {
-                        writeData[cx][cy] = World.SAND;
+                        writeData[cx][cy] = Constants.SAND;
                         continue;
                     }
                     if (red > 100 && blue > 100 && green > 100) {
-                        writeData[cx][cy] = World.STONE;
+                        writeData[cx][cy] =Constants.STONE;
                         continue;
                     }
                     if (red > 100 && blue < 20 && green < 256) {
-                        writeData[cx][cy] = World.TREE;
+                        writeData[cx][cy] = Constants.TREE;
                         continue;
                     }
                     if (red < 20 && blue > 200 && green < 20) {
-                        writeData[cx][cy] = World.WATER;
+                        writeData[cx][cy] = Constants.WATER;
                         continue;
                     }
                 }
@@ -733,14 +737,29 @@ public class MapMaker extends javax.swing.JFrame implements Runnable, MouseMotio
         }
     }
 
+    /**
+     * Returns the red value of an ARGB
+     * @param argb ARGB value
+     * @return red value
+     */
     public static int getRed(int argb) {
         return 0xFF & (argb >> 16);
     }
 
+    /**
+     * Gets the blue value of an ARGB
+     * @param argb ARGB value
+     * @return blue value
+     */
     public static int getBlue(int argb) {
         return 0xFF & argb;
     }
 
+    /**
+     * Gets the green value of an ARGB
+     * @param argb ARGB value
+     * @return green value
+     */
     public static int getGreen(int argb) {
         return 0xFF & (argb >> 8);
     }
@@ -809,6 +828,13 @@ public class MapMaker extends javax.swing.JFrame implements Runnable, MouseMotio
         // body of generated methods, choose Tools | Templates.
     }
 
+    /**
+     * Fills a circle
+     * @param X X coordinate
+     * @param Y Y coordinate
+     * @param R Radius
+     * @param T Type for the filling
+     */
     public void FillCircle(int X, int Y, int R, byte T) {
         // long time = System.nanoTime();
         for (int i1 = Math.max(X - (R + 1), 0); i1 < Math.min(X + (R + 1), www); i1++) {
@@ -820,6 +846,15 @@ public class MapMaker extends javax.swing.JFrame implements Runnable, MouseMotio
         }
     }
 
+    /**
+     * Fills the line
+     * @param X1 Starting point (x coordinate)
+     * @param Y1 Starting point (y coordinate)
+     * @param X2 Ending point (x coordinate)
+     * @param Y2 Ending point (y coordinate)
+     * @param R Radius
+     * @param T
+     */
     public void FillLine(int X1, int Y1, int X2, int Y2, int R, byte T) {
         double dir = Math.atan2(X2 - X1, Y2 - Y1);
         double dis = Math.sqrt((X2 - X1) * (X2 - X1) + (Y2 - Y1) * (Y2 - Y1));
@@ -831,6 +866,9 @@ public class MapMaker extends javax.swing.JFrame implements Runnable, MouseMotio
         }
     }
 
+    /**
+     * Starts and runs the thread
+     */
     public void run() {
         while (true) {
             try {
@@ -847,6 +885,10 @@ public class MapMaker extends javax.swing.JFrame implements Runnable, MouseMotio
         }
     }
 
+    /**
+     * Draws the terrain
+     * @throws Exception
+     */
     public synchronized void drawTerrain() throws Exception {
         // G2.drawImage(Iter, -3, -3, null);
         bg.setPaint(skyPaint);//

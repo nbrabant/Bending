@@ -4,6 +4,32 @@
  */
 package com.johnwesthoff.bending.logic;
 
+import static com.johnwesthoff.bending.Constants.AIR;
+import static com.johnwesthoff.bending.Constants.AURA_RADIUS;
+import static com.johnwesthoff.bending.Constants.CRYSTAL;
+import static com.johnwesthoff.bending.Constants.ETHER;
+import static com.johnwesthoff.bending.Constants.GROUND;
+import static com.johnwesthoff.bending.Constants.HEAD;
+import static com.johnwesthoff.bending.Constants.HEIGHT_INT;
+import static com.johnwesthoff.bending.Constants.ICE;
+import static com.johnwesthoff.bending.Constants.LAND_TEX_SIZE;
+import static com.johnwesthoff.bending.Constants.LAVA;
+import static com.johnwesthoff.bending.Constants.LIQUID_LIST;
+import static com.johnwesthoff.bending.Constants.OIL;
+import static com.johnwesthoff.bending.Constants.OIL_COLOR;
+import static com.johnwesthoff.bending.Constants.SAND;
+import static com.johnwesthoff.bending.Constants.STONE;
+import static com.johnwesthoff.bending.Constants.ST_DRAIN;
+import static com.johnwesthoff.bending.Constants.ST_FLAMING;
+import static com.johnwesthoff.bending.Constants.ST_INVISIBLE;
+import static com.johnwesthoff.bending.Constants.TREE;
+import static com.johnwesthoff.bending.Constants.UGROUND;
+import static com.johnwesthoff.bending.Constants.UICE;
+import static com.johnwesthoff.bending.Constants.USTONE;
+import static com.johnwesthoff.bending.Constants.WATER;
+import static com.johnwesthoff.bending.Constants.WATER_COLOR;
+import static com.johnwesthoff.bending.Constants.WIDTH_INT;
+
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -33,43 +59,30 @@ import com.johnwesthoff.bending.util.Coordinate;
 import com.johnwesthoff.bending.util.network.ResourceLoader;
 
 /**
- *
  * @author John
  */
 public class World implements Serializable {
-    /**
-     *
-     */
     private static final long serialVersionUID = -5361438813968515971L;
-    public int incX, incY;
+    public int incX, incY, floatiness = 0, viewX = 0, viewY = 0, viewdX = 0, viewdY = 0, flowCount = 0, maxFlow = 5000;
     public Random random = new Random();
     public CollisionChecker ground;
     public final CopyOnWriteArrayList<Entity> entityList = new CopyOnWriteArrayList<>();
     public float x = 450, y = 0;
-    public int floatiness = 0;
     public short status = 0;
     /*
      * ~~~~~~~~~~~~~~~~~~~~~Status values~~~~~~~~~~~~~~~~~~~~~ Index: Effect: 0
      * Flaming 1 Shocked 8 Invisible 9 Dark Cloud
-     * 
-     * 
+     *
      */
-    public static final int ST_FLAMING = 0b1;
-    public static final int ST_SHOCKED = 0b10;
-    public static final int ST_INVISIBLE = 0b100000000;
-    public static final int ST_DRAIN = 0b1000000000;
-    public static final int AURA_RADIUS = 96;
-    public int wIdTh = 900, hEigHt = 900;
-    public int viewX = 0, viewY = 0, viewxX = 0, viewyY = 0, viewdX = 0, viewdY = 0;
+
     public final ArrayList<Player> playerList = new ArrayList<>();
     public boolean serverWorld = false, dead = false;
     // public Image terrain;
     public BufferedImage Grass, Sky, Sand, Stone, Ice, Night, Crystal, Ether, Bark;// at the moon
     // public Graphics2D G2D;
-    public double vspeed = 0;
-    public int mouseX = 150, mouseY = 0, V, previousX = 0, previousY = 0, pressX, pressY;
-    public double move = 0;
-    public boolean keys[] = new boolean[3200];
+    public double vspeed = 0, move = 0, fr;
+    public int mouseX = 150, mouseY = 0, previousX = 0, previousY = 0, pressX, pressY;
+    public boolean[] keys = new boolean[3200];
     public float jump = 0;
     public boolean MB1, MB2, MB3;
     public boolean fallingTerrain = false;
@@ -77,61 +90,54 @@ public class World implements Serializable {
     public int FPS = 0;
     public static int head = 26;
     public static int body = 13;
-    public int flowCount = 0, maxFlow = 5000;
     public TexturePaint skyPaint, grassPaint, sandPaint, stonePaint, barkPaint, icePaint, nightPaint;
-    public static final byte AIR = 0, GROUND = 1, WATER = 2, OIL = 3, LAVA = 4, SAND = 5, STONE = 6, TREE = 7, ICE = 8,
-            CRYSTAL = 9, ETHER = 10, UGROUND = 65, USTONE = 70, UICE = 72;
-    public final byte liquidList[] = { WATER, OIL, LAVA, SAND, ETHER, UGROUND, USTONE, UICE };
-    public final int liquidStats[][] = new int[liquidList.length][6];
-    public final byte solidList[] = { SAND, GROUND, STONE, TREE, ICE, CRYSTAL };
-    public final byte aList[] = new byte[127];
-    public int miGenH = 300, maGenH = 300;
     public Color waterColor = new Color(0, 255, 255, 127), oilColor = new Color(12, 12, 12, 200);
     public BufferedImage Iter = new BufferedImage(Constants.WIDTH_INT + 12, Constants.HEIGHT_INT + 12,
             BufferedImage.TYPE_INT_ARGB);
-    public Graphics2D Gter = Iter.createGraphics();
-    public int idinator = 0;
-    public double fr;
-    public Server lol;
 
+    public final int[][] liquidStats = new int[Constants.LIQUID_LIST.length][6];
+    public final byte[] aList = new byte[127];
+    public int miGenH = 300, maGenH = 300, wIdTh = 900, hEigHt = 900;
+    public final byte liquidList[] = { WATER, OIL, LAVA, SAND, ETHER, UGROUND, USTONE, UICE };
+    public final byte solidList[] = { SAND, GROUND, STONE, TREE, ICE, CRYSTAL };
+
+    public int ID = 0;
+    public Server lol = null;
+    public Graphics2D Gter = Iter.createGraphics();
     public World() {
         this(true, 900, 900, null, null, null, null, null, null, null, null, null, null);
         x = 150;
         maxFlow = 150000;
-        // entityList.add(new HouseEntity(150,600,20,20));
-        // entityList.add(new EnemyEntity(150, 10, 0, 0, 5).addStuff(0, idinator++));
     }
-
-    public int ID = 0;
 
     public World(boolean server, int width, int height, Image terrai, BufferedImage grass, BufferedImage sand,
             BufferedImage sky, BufferedImage stone, BufferedImage bark, BufferedImage ice, BufferedImage lavaland,
             BufferedImage crystal, BufferedImage ether) {
         serverWorld = server;
-        Arrays.sort(liquidList);
+        Arrays.sort(LIQUID_LIST);
         for (int i = 0; i < aList.length; i++) {
             aList[i] = -1;
         }
-        aList[WATER] = (byte) Arrays.binarySearch(liquidList, WATER);
-        aList[LAVA] = (byte) Arrays.binarySearch(liquidList, LAVA);
-        aList[SAND] = (byte) Arrays.binarySearch(liquidList, SAND);
-        aList[OIL] = (byte) Arrays.binarySearch(liquidList, OIL);
-        aList[ETHER] = (byte) Arrays.binarySearch(liquidList, ETHER);
-        aList[UGROUND] = (byte) Arrays.binarySearch(liquidList, UGROUND);
-        aList[UICE] = (byte) Arrays.binarySearch(liquidList, UICE);
-        aList[USTONE] = (byte) Arrays.binarySearch(liquidList, USTONE);
+        aList[WATER] = (byte) Arrays.binarySearch(LIQUID_LIST, WATER);
+        aList[LAVA] = (byte) Arrays.binarySearch(LIQUID_LIST, LAVA);
+        aList[SAND] = (byte) Arrays.binarySearch(LIQUID_LIST, SAND);
+        aList[OIL] = (byte) Arrays.binarySearch(LIQUID_LIST, OIL);
+        aList[ETHER] = (byte) Arrays.binarySearch(LIQUID_LIST, ETHER);
+        aList[UGROUND] = (byte) Arrays.binarySearch(LIQUID_LIST, UGROUND);
+        aList[UICE] = (byte) Arrays.binarySearch(LIQUID_LIST, UICE);
+        aList[USTONE] = (byte) Arrays.binarySearch(LIQUID_LIST, USTONE);
         // 0 is the down speed
         // 1 is the horizontal speed
         // 2 is the color
         // 3 is deprecated
         liquidStats[aList[WATER]][0] = 20;// 5
         liquidStats[aList[WATER]][1] = 20;// 9
-        liquidStats[aList[WATER]][2] = waterColor.getRGB();
+        liquidStats[aList[WATER]][2] = WATER_COLOR.getRGB();
         liquidStats[aList[WATER]][3] = 30;
 
         liquidStats[aList[ETHER]][0] = 20;// 5
         liquidStats[aList[ETHER]][1] = 20;// 9
-        liquidStats[aList[ETHER]][2] = waterColor.getRGB();
+        liquidStats[aList[ETHER]][2] = WATER_COLOR.getRGB();
         liquidStats[aList[ETHER]][3] = 30;
 
         liquidStats[aList[LAVA]][0] = 14;// 3
@@ -141,7 +147,7 @@ public class World implements Serializable {
 
         liquidStats[aList[OIL]][0] = 5;// 5
         liquidStats[aList[OIL]][1] = 6;// 6
-        liquidStats[aList[OIL]][2] = oilColor.getRGB();
+        liquidStats[aList[OIL]][2] = OIL_COLOR.getRGB();
         liquidStats[aList[OIL]][3] = 10;
 
         liquidStats[aList[SAND]][0] = 8;// 1
@@ -171,13 +177,12 @@ public class World implements Serializable {
         Ether = ether;
         if (!serverWorld) {
             skyPaint = new TexturePaint(Sky, new Rectangle(200, 200));
-            grassPaint = new TexturePaint(Grass, new Rectangle(256, 256));
-            sandPaint = new TexturePaint(Sand, new Rectangle(256, 256));
-            stonePaint = new TexturePaint(Stone, new Rectangle(256, 256));
-            barkPaint = new TexturePaint(Bark, new Rectangle(256, 256));
-            icePaint = new TexturePaint(Ice, new Rectangle(256, 256));
+            grassPaint = new TexturePaint(Grass, new Rectangle(LAND_TEX_SIZE, LAND_TEX_SIZE));
+            sandPaint = new TexturePaint(Sand, new Rectangle(LAND_TEX_SIZE, LAND_TEX_SIZE));
+            stonePaint = new TexturePaint(Stone, new Rectangle(LAND_TEX_SIZE, LAND_TEX_SIZE));
+            barkPaint = new TexturePaint(Bark, new Rectangle(LAND_TEX_SIZE, LAND_TEX_SIZE));
+            icePaint = new TexturePaint(Ice, new Rectangle(LAND_TEX_SIZE, LAND_TEX_SIZE));
             nightPaint = new TexturePaint(Night, new Rectangle(300, 300));
-            landTexSize = grassPaint.getImage().getWidth();
         }
         // G2D = (Graphics2D)terrain.getGraphics();
         // G2D.setPaint(new TexturePaint(Grass,new Rectangle(256,256)));
@@ -209,6 +214,12 @@ public class World implements Serializable {
     public String username;
     public int idddd;
 
+    /**
+     * Get the player's name
+     * 
+     * @param id id to the player
+     * @return the username of the player
+     */
     public String getPlayerName(int id) {
         if (id == idddd) {
             return username;
@@ -221,6 +232,13 @@ public class World implements Serializable {
         return "No One";
     }
 
+    /**
+     * Load the needed parts
+     * 
+     * @param parts
+     * @param colors
+     * @param colors2
+     */
     public void load(final byte parts[], final int colors[], final int colors2[]) {
         Runnable getStuff = new Runnable() {
             @Override
@@ -286,7 +304,7 @@ public class World implements Serializable {
 
     public final class CollisionChecker {
         public byte[][] cellData = new byte[wIdTh][hEigHt];
-        public int w = wIdTh, h = hEigHt;
+        public int w, h;
         public Thread collisionProcess;
 
         CollisionChecker(int sizex, int sizey) {
@@ -417,6 +435,9 @@ public class World implements Serializable {
             }
         }
 
+        /**
+         * Shows and prints cell data
+         */
         public void ShowData() {
             for (int i1 = 0; i1 < w; i1++) {
                 for (int i2 = 0; i2 < h; i2++) {
@@ -429,8 +450,8 @@ public class World implements Serializable {
         /**
          * Gets whether a pixel is able to be converted to unsupported
          * 
-         * @param X - X coordinate
-         * @param Y - Y coordinate
+         * @param x - X coordinate
+         * @param y - Y coordinate
          */
         private boolean isUnsupportablePixel(int x, int y) {
             if (!inBounds(x, y)) {
@@ -443,8 +464,8 @@ public class World implements Serializable {
         /**
          * Converts a single pixel to unsupported terrain
          * 
-         * @param X - X coordinate of where we want to floodfill
-         * @param Y - Y coordinate of where we want to floodfill
+         * @param x - X coordinate of where we want to floodfill
+         * @param y - Y coordinate of where we want to floodfill
          */
         private void unsupportPixel(int x, int y) {
             this.cellData[x][y] |= 64;
@@ -453,8 +474,8 @@ public class World implements Serializable {
         /**
          * Flood fills terrain converting solid pieces into unsupported pieces
          * 
-         * @param X - X coordinate of where we want to floodfill
-         * @param Y - Y coordinate of where we want to floodfill
+         * @param x - X coordinate of where we want to floodfill
+         * @param y - Y coordinate of where we want to floodfill
          */
         private void unsupport(int x, int y) {
             if (!isUnsupportablePixel(x, y) || !fallingTerrain)
@@ -476,7 +497,7 @@ public class World implements Serializable {
 
         /**
          * Clears a circle using the standard square method
-         * 
+         *
          * @param X - X coordinate of the circle's center
          * @param Y - Y coordinate of the circle's center
          * @param R - Radius of the circle
@@ -511,6 +532,13 @@ public class World implements Serializable {
             }
         }
 
+        /**
+         * Clears the circle at the given position
+         * 
+         * @param X X coordinate
+         * @param Y Y coordinate
+         * @param R
+         */
         public void ClearCircleStrong(int X, int Y, int R) {
             // long time = System.nanoTime();
             for (int i1 = Math.max(X - (R + 1), 0); i1 < Math.min(X + (R + 1), w); i1++) {
@@ -536,6 +564,11 @@ public class World implements Serializable {
 
         }
 
+        /**
+         * Clears the given polygon
+         * 
+         * @param P Polygon to clear
+         */
         public void ClearPolygon(Polygon P) {
             int x, y, minX = w, minY = h, maxX = 0, maxY = 0;
 
@@ -543,16 +576,16 @@ public class World implements Serializable {
                 x = P.xpoints[i];
                 y = P.ypoints[i];
                 if (x > maxX) {
-                    maxX = x > w ? w : x;
+                    maxX = Math.min(x, w);
                 }
                 if (y > maxY) {
                     maxY = y > h ? w : y;
                 }
                 if (x < minX) {
-                    minX = x < 0 ? 0 : x;
+                    minX = Math.max(x, 0);
                 }
                 if (y < minY) {
-                    minY = y < 0 ? 0 : y;
+                    minY = Math.max(y, 0);
                 }
             }
             for (x = minX; x <= minX; x++) {
@@ -569,6 +602,12 @@ public class World implements Serializable {
             // G2D.setPaint(null);
         }
 
+        /**
+         * Fills the given polygon
+         * 
+         * @param P    Polygon to fill
+         * @param type
+         */
         public void FillPolygon(Polygon P, byte type) {
             int x, y, minX = w, minY = h, maxX = 0, maxY = 0;
 
@@ -576,16 +615,16 @@ public class World implements Serializable {
                 x = P.xpoints[i];
                 y = P.ypoints[i];
                 if (x > maxX) {
-                    maxX = x > w ? w : x;
+                    maxX = Math.min(x, w);
                 }
                 if (y > maxY) {
                     maxY = y > h ? w : y;
                 }
                 if (x < minX) {
-                    minX = x < 0 ? 0 : x;
+                    minX = Math.max(x, 0);
                 }
                 if (y < minY) {
-                    minY = y < 0 ? 0 : y;
+                    minY = Math.max(y, 0);
                 }
             }
             for (x = minX; x <= maxX; x++) {
@@ -602,6 +641,13 @@ public class World implements Serializable {
             // G2D.setPaint(null);
         }
 
+        /**
+         * Sets the circle's terrain to GROUND
+         * 
+         * @param X X coordinate
+         * @param Y Y coordinate
+         * @param R
+         */
         public void FillCircle(int X, int Y, int R) {
             // long time = System.nanoTime();
             for (int i1 = Math.max(X - (R + 1), 0); i1 < Math.min(X + (R + 1), w); i1++) {
@@ -619,6 +665,14 @@ public class World implements Serializable {
             // System.out.println(System.nanoTime()-time);
         }
 
+        /**
+         * Fills a given circle and sets the terrain of the cell to the new value
+         * 
+         * @param X X coordinate
+         * @param Y Y coordinate
+         * @param R
+         * @param T Value for the cell data
+         */
         public void FillCircleW(int X, int Y, int R, byte T) {
             // long time = System.nanoTime();
             for (int i1 = Math.max(X - (R + 1), 0); i1 < Math.min(X + (R + 1), w); i1++) {
@@ -636,6 +690,13 @@ public class World implements Serializable {
             // System.out.println(System.nanoTime()-time);
         }
 
+        /**
+         * Changes water to ice
+         * 
+         * @param X
+         * @param Y
+         * @param R
+         */
         public void freeze(int X, int Y, int R) {
             // long time = System.nanoTime();
             for (int i1 = Math.max(X - (R + 1), 0); i1 < Math.min(X + (R + 1), w); i1++) {
@@ -648,6 +709,14 @@ public class World implements Serializable {
             }
         }
 
+        /**
+         * Changes sandy terrain to AIR
+         * 
+         * @param X X coordinate
+         * @param Y Y coordinate
+         * @param R
+         * @return
+         */
         public int sandinate(int X, int Y, int R) {
             int toReturn = 0;
             // long time = System.nanoTime();
@@ -663,6 +732,13 @@ public class World implements Serializable {
             return toReturn;
         }
 
+        /**
+         * Changes air to WATER
+         * 
+         * @param X X coordinate
+         * @param Y Y coordinate
+         * @param R
+         */
         public void puddle(int X, int Y, int R) {
             // long time = System.nanoTime();
             for (int i1 = Math.max(X - (R + 1), 0); i1 < Math.min(X + (R + 1), w); i1++) {
@@ -675,6 +751,14 @@ public class World implements Serializable {
             }
         }
 
+        /**
+         * Fills a rectangle at the given position with GROUND
+         * 
+         * @param X X coordinate
+         * @param Y Y coordinate
+         * @param H Height
+         * @param W Width
+         */
         public void FillRect(int X, int Y, int H, int W) {
             // long time = System.nanoTime();
             for (int i1 = Math.max(X, 0); i1 < Math.min(X + W, w); i1++) {
@@ -688,6 +772,15 @@ public class World implements Serializable {
             // G2D.setPaint(null);
         }
 
+        /**
+         * Fills the rectangle at the given position with a new texture
+         * 
+         * @param X    X coordinate
+         * @param Y    Y coordinate
+         * @param H    Height
+         * @param W    Width
+         * @param with New texture
+         */
         public void FillRectW(int X, int Y, int H, int W, byte with) {
             for (int i1 = Math.max(X, 0); i1 < Math.min(X + W, w); i1++) {
                 for (int i2 = Math.max(Y, 0); i2 < Math.min(Y + H, h); i2++) {
@@ -697,6 +790,16 @@ public class World implements Serializable {
             }
         }
 
+        /**
+         * Draws a clear line from the current position to a given destination
+         * 
+         * @param X1 X Coordinate (current position)
+         * @param Y1 Y Coordinate (current position)
+         * @param X2 X Coordinate (given destination)
+         * @param Y2 Y Coordinate (given destination)
+         * @param R
+         * @param F
+         */
         public void ClearLine(int X1, int Y1, int X2, int Y2, int R, int F) {
             double direction = (pointDir(X1, Y1, X2, Y2));
             double distance = pointDis(X1, Y1, X2, Y2);
@@ -709,6 +812,13 @@ public class World implements Serializable {
             }
         }
 
+        /**
+         * Generates a random entity
+         * 
+         * @param x
+         * @param w
+         * @param type Type for the cell data
+         */
         public void generater(int x, int w, byte type) {
             /*
              * for (int i = 0; i <= 30; i++) {
@@ -720,7 +830,7 @@ public class World implements Serializable {
                 if (random.nextInt(1200) == 5) {
                     entityList.add(new HouseEntity(5 + e, maGenH, 12 + random.nextInt(24), 12 + random.nextInt(24)));
                 }
-                maGenH = (maGenH > 700) ? 700 : (maGenH < 10) ? 10 : maGenH;
+                maGenH = (maGenH > 700) ? 700 : Math.max(maGenH, 10);
                 for (int i = maGenH; i < h; i++)
                     cellData[e][i] = type;
                 maGenH += vs;
@@ -736,7 +846,7 @@ public class World implements Serializable {
         public void generatel(int x, int w, byte type) {
             float vs = -random.nextInt(12), grav = random.nextFloat(), time = 12;
             for (int e = x; e < x + w; e++) {
-                miGenH = (miGenH > 450) ? 450 : (miGenH < 10) ? 10 : miGenH;
+                miGenH = (miGenH > 450) ? 450 : Math.max(miGenH, 10);
                 for (int i = miGenH; i < h; i++)
                     cellData[e][i] = type;
                 miGenH += vs;
@@ -750,6 +860,14 @@ public class World implements Serializable {
 
         }
 
+        /**
+         * Changes the rectangles texture from GROUND to AIR
+         * 
+         * @param X X coordinate
+         * @param Y Y coordinate
+         * @param H Height
+         * @param W Width
+         */
         public void ClearRect(int X, int Y, int H, int W) {
             // long time = System.nanoTime();
             for (int i1 = Math.max(X, 0); i1 < Math.min(X + W, w); i1++) {
@@ -772,6 +890,13 @@ public class World implements Serializable {
     public int osc = 1;
     public boolean keepMoving = false;
 
+    /**
+     * Checks if the cell is solid
+     * 
+     * @param x X value of the cell
+     * @param y Y value of the cell
+     * @return true (if the current cell is solid) or false (else)
+     */
     public boolean isSolid(double x, double y) {
         try {
             if (!inBounds(x, y))
@@ -785,6 +910,13 @@ public class World implements Serializable {
         }
     }
 
+    /**
+     * Checks if the cell is ice
+     * 
+     * @param x X value of the cell
+     * @param y Y value of the cell
+     * @return true (if the current cell is ice) or false (else)
+     */
     public boolean isIce(int x, int y) {
         try {
             if (!inBounds(x, y))
@@ -795,6 +927,13 @@ public class World implements Serializable {
         }
     }
 
+    /**
+     * Checks if the cell is liquid
+     * 
+     * @param x X value of the cell
+     * @param y Y value of the cell
+     * @return true (if the current cell is liquid) or false (else)
+     */
     public boolean isLiquid(float x, float y) {
         try {
             if (!inBounds(x, y))
@@ -806,6 +945,14 @@ public class World implements Serializable {
         }
     }
 
+    /**
+     * Checks if the cell is of a given type
+     * 
+     * @param x X value of the cell
+     * @param y Y value of the cell
+     * @param t Type
+     * @return true (if the cell is of the given type) or false (else)
+     */
     public boolean isType(int x, int y, int t) {
         try {
             return inBounds(x, y) && ground.cellData[x][y] == t;
@@ -813,8 +960,6 @@ public class World implements Serializable {
             return false;
         }
     }
-
-    public double xVel = 0;
 
     public void onUpdate() {
         if (serverWorld) {
@@ -937,7 +1082,7 @@ public class World implements Serializable {
             vspeed = 0;
             keepMoving = false;
         }
-        if (isLiquid(x, y - (int) (head * .75))) {
+        if (isLiquid(x, y - (int) (HEAD * .75))) {
             keepMoving = false;
             if (jump > 0) {
                 vspeed = -2;
@@ -952,7 +1097,8 @@ public class World implements Serializable {
         // }
         if (burn++ > 2) {
             firePolygonred.reset();
-            int xx[] = new int[12], yy[] = new int[12];
+            int[] xx = new int[12];
+            int[] yy = new int[12];
             xx[0] = (0) * Constants.WIDTH_SCALE;
             yy[0] = (0);
             firePolygonred.addPoint(xx[0], yy[0]);
@@ -1082,6 +1228,11 @@ public class World implements Serializable {
     public static int burn = 0;
     public double leftArmAngle = 90, rightArmAngle = 90;
 
+    /**
+     * Draws the entities
+     * 
+     * @param g Graphics
+     */
     public void drawEntities(Graphics g) {
         for (int i = 0; i < entityList.size(); i++) {
             Entity e = entityList.get(i);
@@ -1098,9 +1249,14 @@ public class World implements Serializable {
     public static Polygon firePolygonred = new Polygon(), firePolygonyellow = new Polygon(),
             firePolygonorange = new Polygon();
 
+    /**
+     * Draws the players
+     * 
+     * @param g Graphics
+     */
     public void drawPlayers(Graphics g) {
         float offs = x % 8;
-        if ((status & World.ST_INVISIBLE) == 0) {
+        if ((status & ST_INVISIBLE) == 0) {
             if (!done) {
                 // x+=move;
                 g.drawArc((int) ((x - 2) - viewX) * Constants.WIDTH_SCALE,
@@ -1271,6 +1427,13 @@ public class World implements Serializable {
 
     public int map;
 
+    /**
+     * Draws fire
+     * 
+     * @param g2 Graphics
+     * @param xx
+     * @param yy
+     */
     public static void drawFire(Graphics g2, int xx, int yy) {
         firePolygonred.translate(xx, yy);
         firePolygonorange.translate(xx, yy);
@@ -1290,6 +1453,11 @@ public class World implements Serializable {
         firePolygonyellow.translate(-xx, -yy);
     }
 
+    /**
+     * Draws terrain
+     * 
+     * @param G2 Graphics (in 2D)
+     */
     public synchronized void drawTerrain(Graphics2D G2) {
         try {
             int xx = viewX, yy = viewY;
@@ -1314,6 +1482,8 @@ public class World implements Serializable {
 
             for (int X = xx; X < Math.min(xx + Constants.WIDTH_INT, wIdTh); X++) {
                 for (int Y = yy; Y < Math.min(yy + Constants.HEIGHT_INT, hEigHt); Y++) {
+                    final int minX = Math.min(X + 3 - xx, WIDTH_INT);
+                    final int minY = Math.min(Y + 3 - yy, HEIGHT_INT);
                     switch (ground.cellData[X][Y]) {
                         default:
                             break;
@@ -1355,11 +1525,7 @@ public class World implements Serializable {
                                     Math.min(Y + 3 - yy, Constants.HEIGHT_INT), Ether.getRGB(X % 100, Y % 100));
                             break;
                         case WATER:
-                            Iter.setRGB(X + 4 - xx, Y + 4 - yy, liquidStats[aList[ground.cellData[X][Y]]][2]);
-                            break;
                         case LAVA:
-                            Iter.setRGB(X + 4 - xx, Y + 4 - yy, liquidStats[aList[ground.cellData[X][Y]]][2]);
-                            break;
                         case OIL:
                             Iter.setRGB(X + 4 - xx, Y + 4 - yy, liquidStats[aList[ground.cellData[X][Y]]][2]);
                             break;
@@ -1385,6 +1551,13 @@ public class World implements Serializable {
         vspeed = 0;
     }
 
+    /**
+     * Checks if the given location is still in bounds
+     * 
+     * @param i1 X coordinate
+     * @param i2 Y coordinate
+     * @return true (if it is still in bounds) or false (else)
+     */
     public boolean inBounds(double i1, double i2) {
         return (i1 >= 0 && i1 < wIdTh && i2 >= 0 && i2 < hEigHt);
     }
@@ -1406,6 +1579,15 @@ public class World implements Serializable {
         return false;
     }
 
+    /**
+     * Creates a new explosion entity
+     * 
+     * @param x X coordinate
+     * @param y Y coordinate
+     * @param r
+     * @param n
+     * @param c
+     */
     public void explode(int x, int y, int r, int n, int c) {
         ground.ClearCircle(x, y, r);
         entityList.add(new ExplosionEntity(x, y, r / 2, 2));
@@ -1420,6 +1602,15 @@ public class World implements Serializable {
         }
     }
 
+    /**
+     * Removes the explosion entity
+     * 
+     * @param x
+     * @param y
+     * @param r
+     * @param n
+     * @param c
+     */
     public void unexplode(int x, int y, int r, int n, int c) {
         ground.FillCircle(x, y, r);
         int tobe, xx, yy;
@@ -1448,6 +1639,9 @@ public class World implements Serializable {
         return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
     }
 
+    /**
+     * Randomly generates either sand or water
+     */
     public void generateSandAndWater() {
         for (int i = 0; i <= 6; i++) {
             entityList.add(new WaterEntity(random.nextInt(wIdTh), random.nextInt(hEigHt), this,
@@ -1455,6 +1649,9 @@ public class World implements Serializable {
         }
     }
 
+    /**
+     * Moves the players
+     */
     public void movePlayers() {
         for (Player P : playerList) {
             if (!isSolid(P.x, P.y - 4)) {
@@ -1525,6 +1722,14 @@ public class World implements Serializable {
         }
     }
 
+    /**
+     * Generates a tree at the given destination
+     * 
+     * @param ix X coordinate
+     * @param iy Y coordinate
+     * @param mH Height
+     * @param mW Width
+     */
     public void generateTree(int ix, int iy, int mH, int mW) {
         while (!isSolid(ix, iy + 1)) {
             iy++;
@@ -1559,6 +1764,14 @@ public class World implements Serializable {
         unexplode(ix, iy - H, 16, 8, 8);
     }
 
+    /**
+     * Replaces a given color of an image with a new one
+     * 
+     * @param image       Image to change the color
+     * @param mask        Color to change
+     * @param replacement New color
+     * @return The new image
+     */
     public static BufferedImage changeColor(BufferedImage image, Color mask, Color replacement) {
         /*
          * BufferedImage destImage = new BufferedImage(image.getWidth(),
@@ -1567,13 +1780,13 @@ public class World implements Serializable {
          * g.dispose(); int[] colors = image.getRGB(0, 0, image.getWidth(),
          * image.getHeight(), null, 0, 1); for (int i = 0; i < destImage.getWidth();
          * i++) { for (int j = 0; j < destImage.getHeight(); j++) {
-         * 
+         *
          * int destRGB = destImage.getRGB(i, j);
-         * 
+         *
          * if (matches(mask.getRGB(), destRGB)) { int rgbnew =
          * getNewPixelRGB(replacement.getRGB(), destRGB); destImage.setRGB(i, j,
          * rgbnew); } } }
-         * 
+         *
          * return destImage; int[] colors = image.getRGB(0, 0, image.getWidth(),
          * image.getHeight(), null, 0, 1); int colorChange = mask.getRGB(); int colorTo
          * = replacement.getRGB(); for (int i = 0; i < colors.length; i++) { if
@@ -1603,15 +1816,4 @@ public class World implements Serializable {
         lol = 1;
         return lol;
     }
-
-    public static final int ALPHA = 0;
-    public static final int RED = 1;
-    public static final int GREEN = 2;
-    public static final int BLUE = 3;
-
-    public static final int HUE = 0;
-    public static final int SATURATION = 1;
-    public static final int BRIGHTNESS = 2;
-
-    public static final int TRANSPARENT = 0;
 }

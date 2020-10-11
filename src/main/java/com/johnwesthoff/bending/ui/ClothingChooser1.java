@@ -492,9 +492,8 @@ public class ClothingChooser1 extends javax.swing.JPanel implements Runnable {
                 post += i == colors2.length - 1 ? "" : ",";
             }
             // System.out.println(post);
-
             avatarService.changesAppearance(post, Client.jtb.getText());
-        } // TODO add your handling code here:
+        }
     }
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {
@@ -514,6 +513,9 @@ public class ClothingChooser1 extends javax.swing.JPanel implements Runnable {
         Client.immaKeepTabsOnYou.setSelectedIndex(0);
     }
 
+    /**
+     * Loads the clothing of the client
+     */
     public void loadClothing() {
         avatarService.getAppearance(Client.jtb.getText(), app.jtp.getText());
 
@@ -530,6 +532,9 @@ public class ClothingChooser1 extends javax.swing.JPanel implements Runnable {
      */
     Thread getTem;
 
+    /**
+     * Loads the images
+     */
     public void getImages() {
         Runnable getStuff = new Runnable() {
 

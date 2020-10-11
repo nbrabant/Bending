@@ -4,21 +4,17 @@ package com.johnwesthoff.bending.entity;
  * and open the template in the editor.
  */
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.image.BufferedImage;
-import java.nio.ByteBuffer;
-
 import com.johnwesthoff.bending.Constants;
 import com.johnwesthoff.bending.Server;
 import com.johnwesthoff.bending.logic.PlayerOnline;
 import com.johnwesthoff.bending.logic.World;
 import com.johnwesthoff.bending.util.network.ResourceLoader;
 
-
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.nio.ByteBuffer;
 
 /**
- *
  * @author John
  */
 public class GuardianEntity extends EnemyEntity {
@@ -122,14 +118,14 @@ public class GuardianEntity extends EnemyEntity {
             }
 
         }
-        if (!handle.earth.isType((int) X, (int) Y, World.AIR)) {
+        if (!handle.earth.isType((int) X, (int) Y, Constants.AIR)) {
             if (air-- < 0) {
                 HP -= 2;
             }
         } else {
             air = 100;
         }
-        if (handle.earth.isType((int) X, (int) Y, World.LAVA)) {
+        if (handle.earth.isType((int) X, (int) Y, Constants.LAVA)) {
             HP -= 2;
         }
         if (timer++ > 90) {
@@ -140,6 +136,12 @@ public class GuardianEntity extends EnemyEntity {
         }
     }
 
+    /**
+     * Reconstruct the guardian entity
+     * 
+     * @param in
+     * @param world World in which the entity should be reconstructed
+     */
     public static void reconstruct(ByteBuffer in, World world) {
         // System.out.println("IM BACK!");
         world.entityList.add(new GuardianEntity(in.getInt(), in.getInt(), in.getInt(), in.getInt(), in.getInt())
